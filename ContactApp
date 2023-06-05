@@ -1,0 +1,74 @@
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  FlatList,
+  Alert,
+} from 'react-native';
+import Contacts from 'react-native-contacts';
+import PopupDialog from 'react-native-popup-dialog';
+
+const App = () => {
+  const [contacts, setContacts] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedContact, setSelectedContact] = useState(null);
+
+  useEffect(() => {
+    Contacts.getAll().then((phoneContacts) => {
+      setContacts(phoneContacts);
+    });
+  }, []);
+
+  const handleContactPress = (contact) => {
+    setSelectedContact(contact);
+    this.popupDialog.show();
+  };
+
+  const handleSearch = (text) => {
+    setSearchTerm(text);
+  };
+
+  const filteredContacts = contacts.filter(
+    (contact) =>
+      contact.givenName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      contact.familyName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const renderItem = ({ item }) => (
+    <TouchableOpacity
+      style={{ padding: 10 }}
+      onPress={() => handleContactPress(item)}
+    >
+      <Text>{`${item.givenName} ${item.familyName}`}</Text>
+    </TouchableOpacity>
+  );
+
+  return (
+    <View style={{ flex: 1, padding: 10 }}>
+      <TextInput
+        style={{ height: 40, borderColor: 'gray', borderWidth: 1, marginBottom: 10 }}
+        placeholder="Search..."
+        onChangeText={handleSearch}
+        value={searchTerm}
+      />
+
+      <FlatList
+        data={filteredContacts}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.recordID}
+      />
+
+      <PopupDialog
+        ref={(popupDialog) => {
+          this.popupDialog = popupDialog;
+        }}
+      >
+        {selectedContact && (
+          <View>
+            <Text>{`${selectedContact.givenName} ${selectedContact.familyName}`}</Text>
+            <Text>{selectedContact.phoneNumbers[0]?.number}</Text>
+            <TouchableOpacity
+              style={{ padding: 10, backgroundColor: 'red', marginTop: 10 }}
+              onPress={() => this.popupDialog.dismiss()}
